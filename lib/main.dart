@@ -8,8 +8,8 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Demo',
-      home: MyHomePage(title: 'Flutter Demo Home Page'),
+      title: 'Flutter Geo Demo',
+      home: MyHomePage(title: 'Example de geolocalisation'),
     );
   }
 }
@@ -25,15 +25,29 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  String adress = '00.00';
+  String adress_longitude = '00.00';
+  String adress_latitude = '00.00';
+  String adress_altitude = '00.00';
+  String adress_time = '00.00';
+  String adress_speed = '00.00';
+
+
   Future getadress () async{
 
-    Position position = await Geolocator().getCurrentPosition(desiredAccuracy: LocationAccuracy.high);
-    adress = position.longitude.toString();
+    Position position = await Geolocator().getCurrentPosition(desiredAccuracy: LocationAccuracy.bestForNavigation);
+    adress_longitude = position.longitude.toString();
+    adress_latitude = position.latitude.toString();
+    adress_altitude = position.altitude.toString();
+    adress_time = position.timestamp.second.toString();
+    adress_speed = position.speed.toString();
+    print('$adress_latitude $adress_longitude $adress_altitude');
+    double d = await Geolocator().distanceBetween(36.7179526, 3.1530259, 36.7179609, 3.1527123);
+    print( d );
+   // Geolocator().getPositionStream()
 
 
   }
-  void _incrementCounter() async {
+  void recuperer_adr() async {
     try {
       await getadress();
     } catch(e) {
@@ -65,17 +79,45 @@ class _MyHomePageState extends State<MyHomePage> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
             Text(
-              'votre adresee est : ',
+              'votre longitude est : ',
             ),
             Text(
-              '$adress',
+              '$adress_longitude',
+              style: Theme.of(context).textTheme.display1,
+            ),
+            Text(
+              'votre latitude est : ',
+            ),
+            Text(
+              '$adress_latitude',
+              style: Theme.of(context).textTheme.display1,
+            ),
+            Text(
+              'votre altitude est : ',
+            ),
+            Text(
+              '$adress_altitude',
+              style: Theme.of(context).textTheme.display1,
+            ),
+            Text(
+              'votre vitesse est : ',
+            ),
+            Text(
+              '$adress_speed',
+              style: Theme.of(context).textTheme.display1,
+            ),
+            Text(
+              'La seconde est : ',
+            ),
+            Text(
+              '$adress_time',
               style: Theme.of(context).textTheme.display1,
             ),
           ],
         ),
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
+        onPressed: recuperer_adr,
         tooltip: 'Increment',
         child: Icon(Icons.add),
       ), // This trailing comma makes auto-formatting nicer for build methods.
