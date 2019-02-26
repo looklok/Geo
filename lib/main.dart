@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
+import 'dart:async';
 
 void main() => runApp(MyApp());
 
@@ -25,47 +26,91 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  String adress_longitude = '00.00';
+  String adress_longitude = '00.00' ;
   String adress_latitude = '00.00';
-  String adress_altitude = '00.00';
-  String adress_time = '00.00';
-  String adress_speed = '00.00';
+  String adress_time_seconde = '00.00';
+  String adress_time_heure = '00.00';
+  String adress_time_minute = '00.00';
 
+  String adress_speed = '00.00';
+  String localite='';
+  bool connected = false;
+  String siconnecte = 'ETAT : pas connecte';
+  String wilaya='';
+  StreamSubscription<Position> positionStream ;
+  double distance=0;
 
   Future getadress () async{
-
-    Position position = await Geolocator().getCurrentPosition(desiredAccuracy: LocationAccuracy.bestForNavigation);
+    int i =0;
+    /*Position position = await Geolocator().getCurrentPosition(desiredAccuracy: LocationAccuracy.bestForNavigation);
     adress_longitude = position.longitude.toString();
     adress_latitude = position.latitude.toString();
-    adress_altitude = position.altitude.toString();
     adress_time = position.timestamp.second.toString();
     adress_speed = position.speed.toString();
     print('$adress_latitude $adress_longitude $adress_altitude');
-    double d = await Geolocator().distanceBetween(36.7179526, 3.1530259, 36.7179609, 3.1527123);
-    print( d );
-   // Geolocator().getPositionStream()
+    List<Placemark> placemark = await Geolocator().placemarkFromCoordinates(position.latitude, position.longitude);
+    localite = placemark[0].locality;
+    wilaya = placemark[0].administrativeArea;*/
+    if (connected == true) {
+      var locationOptions = LocationOptions(accuracy: LocationAccuracy.bestForNavigation, distanceFilter: 10);
 
+      positionStream = Geolocator().getPositionStream(locationOptions).listen((Position position1)
+          {
 
+                  print(i);
+                  i++;
+                  print(position1 == null ? 'Unknown' : position1.latitude.toString() + ', ' + position1.longitude.toString());
+                  adress_longitude = position1.longitude.toString();
+                  adress_latitude = position1.latitude.toString();
+                  adress_speed=(position1.speed*1.85).toString();
+                  adress_time_seconde = position1.timestamp.second.toString();
+                  adress_time_minute = position1.timestamp.minute.toString();
+                  adress_time_heure = position1.timestamp.hour.toString();
+                  print(position1.speedAccuracy);
+                  Geolocator().distanceBetween(36.745664, 3.069634, position1.latitude, position1.longitude).then((double d){
+                    distance=d;
+                  });
+
+                  setState(() {});
+
+          });
+    }else {
+      print('heeeeeeeere');
+      positionStream.cancel();
+      setState(() {
+
+      });
+
+    }
   }
+
   void recuperer_adr() async {
     try {
       await getadress();
     } catch(e) {
       print(e);
     }
-
-    setState(() {
-    });
   }
+  void connect ()
+  {
+    if (connected==false){connected = true;
+    siconnecte = 'ETAT :connecte';
+    recuperer_adr();
+    setState(() {
+
+    });}
+    else {
+      connected = false;
+      siconnecte = 'ETAT : pas connecte';
+      print('stream cancelled');
+      positionStream.cancel();
+      setState(() {});
+          }
+    }
 
   @override
   Widget build(BuildContext context) {
-    // This method is rerun every time setState is called, for instance as done
-    // by the _incrementCounter method above.
-    //
-    // The Flutter framework has been optimized to make rerunning build methods
-    // fast, so that you can just rebuild anything that needs updating rather
-    // than having to individually change instances of widgets.
+
     return Scaffold(
       appBar: AppBar(
         // Here we take the value from the MyHomePage object that was created by
@@ -78,6 +123,12 @@ class _MyHomePageState extends State<MyHomePage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
+            Text(
+              wilaya + '  '+localite
+            ),
+            Text(
+              '             '
+            ),
             Text(
               'votre longitude est : ',
             ),
@@ -92,13 +143,7 @@ class _MyHomePageState extends State<MyHomePage> {
               '$adress_latitude',
               style: Theme.of(context).textTheme.display1,
             ),
-            Text(
-              'votre altitude est : ',
-            ),
-            Text(
-              '$adress_altitude',
-              style: Theme.of(context).textTheme.display1,
-            ),
+
             Text(
               'votre vitesse est : ',
             ),
@@ -107,20 +152,28 @@ class _MyHomePageState extends State<MyHomePage> {
               style: Theme.of(context).textTheme.display1,
             ),
             Text(
-              'La seconde est : ',
+              'L\'instant est : ',
             ),
             Text(
-              '$adress_time',
+              '$adress_time_heure : $adress_time_minute : $adress_time_seconde',
               style: Theme.of(context).textTheme.display1,
             ),
+            Text(
+              'La distance de la a Maqem a chahid est : ',
+            ),
+            Text(
+              '$distance',
+              style: Theme.of(context).textTheme.display1,
+            ),
+            RaisedButton(child: Text(' connectée/ deconnecte '),
+             textColor: Colors.deepOrange,
+              onPressed: connect ,
+            ),
+            Text(siconnecte)
           ],
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: recuperer_adr,
-        tooltip: 'Increment',
-        child: Icon(Icons.add),
-      ), // This trailing comma makes auto-formatting nicer for build methods.
+       // This trailing comma makes auto-formatting nicer for build methods.
     );
   }
 }
