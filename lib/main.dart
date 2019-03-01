@@ -52,6 +52,7 @@ class _MyHomePageState extends State<MyHomePage> {
     localite = placemark[0].locality;
     wilaya = placemark[0].administrativeArea;*/
     if (connected == true) {
+      print('iiiii iiiiiiii');
       var locationOptions = LocationOptions(accuracy: LocationAccuracy.bestForNavigation, distanceFilter: 10);
 
       positionStream = Geolocator().getPositionStream(locationOptions).listen((Position position1)
