@@ -11,8 +11,8 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Geo Demo',
-      home: MyHomePage(title: 'Example de geolocalisation'),
+      title: 'Application du bus',
+      home: MyHomePage(title: 'BusTrucker'),
     );
   }
 }
@@ -30,48 +30,36 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
   String adress_longitude = '00.00' ;
   String adress_latitude = '00.00';
-  String adress_time_seconde = '00.00';
-  String adress_time_heure = '00.00';
-  String adress_time_minute = '00.00';
   String adress_speed = '00.00';
   String localite='';
   bool connected = false;
-  String siconnecte = 'ETAT : pas connecte';
+  String siconnecte = 'Pas Connecté';
   String wilaya='';
   StreamSubscription<Position> positionStream ;
   double distance=0;
   double busID = 1;
   double ligne = 1;
   bool first = true;
+  var _color = Color.fromRGBO(229,144,129, 1);
+  var buttoncolor = Color.fromRGBO(127,0,0, 1);
 
 
-  Future getadress () async{
+  Future getadress () async{ /// recuperer la position,vitesse faire des mise à jour pour le bus prochain en temps reel
 
     var busref = Firestore.instance.collection('bus').document('bus '+busID.toString());
-    List<DocumentSnapshot> l;
-    /*var ref = Firestore.instance.collection('bus');
-    var query = ref.getDocuments();
-    query.then((QuerySnapshot q) {
-      q.documents.forEach((DocumentSnapshot v) {
-        int.parse(v.documentID);
-      });
-    });*/
     if (connected == true) {
       /* writing to database */
       Map<String ,dynamic> data = Map();
       data['ligne']=ligne;
       data['busID'] = busID;
       data['actif'] = true;
-      var locationOptions = LocationOptions(accuracy: LocationAccuracy.bestForNavigation, distanceFilter: 10);
+      var locationOptions = LocationOptions(accuracy: LocationAccuracy.best, distanceFilter: 10);
       positionStream =Geolocator().getPositionStream(locationOptions).listen((Position position1) async
           {
                   print(position1 == null ? 'Unknown' : position1.latitude.toString() + ', ' + position1.speed.toString());
                   adress_longitude = position1.longitude.toString();
                   adress_latitude = position1.latitude.toString();
                   adress_speed=(position1.speed*3.6).toString();
-                  adress_time_seconde = position1.timestamp.second.toString();
-                  adress_time_minute = position1.timestamp.minute.toString();
-                  adress_time_heure = position1.timestamp.hour.toString();
                   data['latitude'] = position1.latitude;
                   data['longitude'] = position1.longitude;
                   data['vitesse'] = (position1.speed*3.6);
@@ -96,9 +84,6 @@ class _MyHomePageState extends State<MyHomePage> {
 
                   }
                   busref.setData(data);
-                  Geolocator().distanceBetween(36.745664, 3.069634, position1.latitude, position1.longitude).then((double d){
-                    distance=d;
-                  });
                   setState(() {});
           });
     }
@@ -110,7 +95,7 @@ class _MyHomePageState extends State<MyHomePage> {
     }
   }
 
-  void recuperer_adr() async {
+  void recuperer_adr() async { /// on essaye de recuperer nos données (positoin , vitesse ...)
     try {
       await getadress();
     } catch(e) {
@@ -121,13 +106,17 @@ class _MyHomePageState extends State<MyHomePage> {
   {
     if (connected==false) {
         connected = true;
-        siconnecte = 'ETAT :connecte';
+        _color =Color.fromRGBO(152,238,153, 1);
+        siconnecte = 'Connecté';
+        buttoncolor = Color.fromRGBO(0,80,5, 1);
         recuperer_adr();
         setState(() {});
           }
     else {
       connected = false;
-      siconnecte = 'ETAT : pas connecte';
+      _color = Color.fromRGBO(255,138,128, 1);
+      buttoncolor = Color.fromRGBO(127,0,0, 1);
+      siconnecte = 'Pas Connecté';
       print('stream cancelled');
       recuperer_adr();
       setState(() {});
@@ -139,58 +128,83 @@ class _MyHomePageState extends State<MyHomePage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.title),
+        elevation: 2.0,
+        title: Text(widget.title , style: TextStyle( fontWeight: FontWeight.bold ,fontSize: 22.0 , color: Color.fromRGBO(254,38,77,1)),
+        ),
+        centerTitle: true,
+        backgroundColor: Color.fromRGBO(255,221,8,1),
+        brightness: Brightness.dark,
+        leading: Icon(Icons.directions_bus , size: 27.5,color: Color.fromRGBO(254,38,77,1)),
       ),
+      
       body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            Text(
-              wilaya + '  '+localite
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: <Widget>[
+               Container(
+                    height: 150,
+                    width: 150,
+                    margin: EdgeInsets.only(bottom: 50),
+                    child: Image.asset('assets/images/logo.png', fit: BoxFit.contain, width: 25, height: 35,)
+          ),
+              Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: <Widget>[
+                        Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: <Widget>[
+                              Text(
+                              'votre longitude est : ',
+                                style: TextStyle(fontSize: 18.0, fontWeight: FontWeight.bold ,color: Color.fromRGBO(254,38,77, 1)),
+                              ),
+                              Text(
+                                '${adress_longitude}',
+                                style: TextStyle(color:/* Color.fromRGBO(208,92,227, 1)*/ Colors.black87, fontSize: 25),
+                              ),]),
+                        Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: <Widget>[
+                              Text(
+                              'votre latitude est : ',
+                                style: TextStyle(fontSize: 18.0,fontWeight: FontWeight.bold,color: Color.fromRGBO(254,38,77, 1) ),
+                              ),
+                              Text(
+                                '$adress_latitude',
+                                style: TextStyle(color:/* Color.fromRGBO(208,92,227, 1)*/ Colors.black87 , fontSize: 25),
+                              ),
+                            ]
             ),
-            Text(
-              '             '
+                      ]
             ),
-            Text(
-              'votre longitude est : ',
-            ),
-            Text(
-              '$adress_longitude',
-              style: Theme.of(context).textTheme.display1,
-            ),
-            Text(
-              'votre latitude est : ',
-            ),
-            Text(
-              '$adress_latitude',
-              style: Theme.of(context).textTheme.display1,
-            ),
-            Text(
-              'votre vitesse est : ',
+            Padding(padding: EdgeInsets.fromLTRB(0, 14, 0, 0),
+                child :Text(
+                'votre vitesse est : ',
+                  style: TextStyle(fontSize: 20.0, fontWeight: FontWeight.bold,color:Color.fromRGBO(254,38,77, 1)),
+
+                ),
             ),
             Text(
               '$adress_speed',
-              style: Theme.of(context).textTheme.display1,
+              style: TextStyle(color: Colors.black87 , fontSize: 25),
             ),
-            Text(
-              'L\'instant est : ',
+            Container(
+              width: 300,
+              height: 80,
+              margin: EdgeInsets.fromLTRB(0,80,0,15),
+              child : RaisedButton.icon(
+                         icon: Icon(Icons.settings_input_antenna,size: 50.5,color: buttoncolor),
+                         label: Text(siconnecte , style: TextStyle( fontSize: 25.0,color: buttoncolor ),
+                         ),
+                        textColor: Colors.white ,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(75)),
+                        elevation: 10,
+                        onPressed: connect , ///les changements sur l'ecran se déclenche d'ici
+                          color: _color,
+                          highlightElevation: 10,
+                      ),
             ),
-            Text(
-              '$adress_time_heure : $adress_time_minute : $adress_time_seconde',
-              style: Theme.of(context).textTheme.display1,
-            ),
-            Text(
-              'La distance de la a Maqem a chahid est : ',
-            ),
-            Text(
-              '$distance',
-              style: Theme.of(context).textTheme.display1,
-            ),
-            RaisedButton(child: Text(' connectée/ deconnecte '),
-             textColor: Colors.deepOrange,
-              onPressed: connect ,
-            ),
-            Text(siconnecte)
+            Text('ETAT : '+siconnecte, style: TextStyle(fontSize: 16.0),
+            )
           ],
         ),
       ),
