@@ -144,7 +144,7 @@ class _MyHomePageState extends State<MyHomePage> {
                Container(
                     height: 150,
                     width: 150,
-                    margin: EdgeInsets.only(bottom: 50),
+                    margin: EdgeInsets.only(bottom: 60),
                     child: Image.asset('assets/images/logo.png', fit: BoxFit.contain, width: 25, height: 35,)
           ),
               Row(
@@ -190,7 +190,7 @@ class _MyHomePageState extends State<MyHomePage> {
             Container(
               width: 300,
               height: 80,
-              margin: EdgeInsets.fromLTRB(0,80,0,15),
+              margin: EdgeInsets.fromLTRB(0,60,0,15),
               child : RaisedButton.icon(
                          icon: Icon(Icons.settings_input_antenna,size: 50.5,color: buttoncolor),
                          label: Text(siconnecte , style: TextStyle( fontSize: 25.0,color: buttoncolor ),
