@@ -29,7 +29,7 @@ class _MyHomePageState extends State<MyHomePage> {
   bool first = true;
   var _color = Color.fromRGBO(229,144,129, 1);
   var buttoncolor = Color.fromRGBO(127,0,0, 1);
-  var direction;
+  var direction = 'none';
 
 
   Future getadress () async{ /// recuperer la position,vitesse faire des mise à jour pour le bus prochain en temps reel

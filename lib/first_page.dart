@@ -43,8 +43,8 @@ class _FirstState extends State<First> {
         if(this.password == query.documents[i].data['password'].floor().toString()) verifie=true;
         else{i++;}
       }
-      print(verifie.toString());
-     if (verifie == true ) Navigator.push(context, MaterialPageRoute(builder: (context)=>MyHomePage(info: query.documents[i])));
+      print(query.documents[i].documentID.toString());
+     if (verifie == true ) Navigator.push(context, MaterialPageRoute(builder: (context)=>MyHomePage(info: query.documents[i]) ));
 
   }
   @override
