@@ -4,24 +4,13 @@ import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 
-void main() => runApp(MyApp());
 
-class MyApp extends StatelessWidget {
-  // This widget is the root of your application.
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Application du bus',
-      home: MyHomePage(title: 'BusTrucker'),
-    );
-  }
-}
 
 class MyHomePage extends StatefulWidget {
-  MyHomePage({Key key, this.title}) : super(key: key);
+  MyHomePage({this.info});
 
+  final DocumentSnapshot info;
 
-  final String title;
 
   @override
   _MyHomePageState createState() => _MyHomePageState();
@@ -31,13 +20,11 @@ class _MyHomePageState extends State<MyHomePage> {
   String adress_longitude = '00.00' ;
   String adress_latitude = '00.00';
   String adress_speed = '00.00';
-  String localite='';
   bool connected = false;
   String siconnecte = 'Pas Connecté';
-  String wilaya='';
   StreamSubscription<Position> positionStream ;
   double distance=0;
-  double busID = 1;
+ // double busID = widget.info.data['busID'];
   double ligne = 1;
   bool first = true;
   var _color = Color.fromRGBO(229,144,129, 1);
@@ -45,15 +32,15 @@ class _MyHomePageState extends State<MyHomePage> {
 
 
   Future getadress () async{ /// recuperer la position,vitesse faire des mise à jour pour le bus prochain en temps reel
-
-    var busref = Firestore.instance.collection('bus').document('bus '+busID.toString());
+    print(widget.info.data['busID'].toString());
+    var query = await Firestore.instance.collection('bus').where('busID',isEqualTo: widget.info.data['busID']).getDocuments();
     if (connected == true) {
       /* writing to database */
       Map<String ,dynamic> data = Map();
-      data['ligne']=ligne;
-      data['busID'] = busID;
+      data['ligne']=widget.info.data['ligne'];
+      data['busID'] = widget.info.data['busID'];
       data['actif'] = true;
-      var locationOptions = LocationOptions(accuracy: LocationAccuracy.best, distanceFilter: 10);
+      var locationOptions = LocationOptions(accuracy: LocationAccuracy.best, distanceFilter: 5);
       positionStream =Geolocator().getPositionStream(locationOptions).listen((Position position1) async
           {
                   print(position1 == null ? 'Unknown' : position1.latitude.toString() + ', ' + position1.speed.toString());
@@ -66,10 +53,9 @@ class _MyHomePageState extends State<MyHomePage> {
                   if (first == true) {data['prochain']=2; first= false;}
                   else {
                     /// récuperer l'arret prochain de ce bus
-                    var query = await Firestore.instance.collection('bus').where('busID',isEqualTo: busID).getDocuments();
-                     int prochain = query.documents[0].data['prochain'];
+                    int prochain = query.documents[0].data['prochain'];
                      print('prochain  : '+prochain.toString());
-                     var Ligne = await Firestore.instance.collection('lignes').where('ligneID' , isEqualTo: ligne).getDocuments();
+                     var Ligne = await Firestore.instance.collection('lignes').where('ligneID' , isEqualTo: widget.info.data['ligne']).getDocuments();
                      ///récuperer le nombre d'arrets de bus de ce bus
                      var nb = Ligne.documents[0].data['nb_arrets'];
                      var query1 = await Ligne.documents[0].reference.collection('arrets de bus').where('arretID', isEqualTo: prochain).getDocuments();
@@ -83,13 +69,13 @@ class _MyHomePageState extends State<MyHomePage> {
                       else {data['prochain']=prochain;}
 
                   }
-                  busref.setData(data);
+                  query.documents[0].reference.updateData(data);
                   setState(() {});
           });
     }
     else {
       print('heeeeeeeere');
-      busref.updateData({'actif' : false});
+      query.documents[0].reference.updateData({'actif' : false});
       positionStream.cancel();
       setState(() {});
     }
@@ -97,7 +83,8 @@ class _MyHomePageState extends State<MyHomePage> {
 
   void recuperer_adr() async { /// on essaye de recuperer nos données (positoin , vitesse ...)
     try {
-      await getadress();
+      await getadress().whenComplete((){ if (connected == true){ siconnecte = 'Connecté'; setState(() {}); }   });
+
     } catch(e) {
       print(e);
     }
@@ -107,7 +94,7 @@ class _MyHomePageState extends State<MyHomePage> {
     if (connected==false) {
         connected = true;
         _color =Color.fromRGBO(152,238,153, 1);
-        siconnecte = 'Connecté';
+        siconnecte = 'GPS ... ';
         buttoncolor = Color.fromRGBO(0,80,5, 1);
         recuperer_adr();
         setState(() {});
@@ -128,8 +115,8 @@ class _MyHomePageState extends State<MyHomePage> {
 
     return Scaffold(
       appBar: AppBar(
-        elevation: 2.0,
-        title: Text(widget.title , style: TextStyle( fontWeight: FontWeight.bold ,fontSize: 22.0 , color: Color.fromRGBO(254,38,77,1)),
+        elevation: 4.0,
+        title: Text('BusTracker' , style: TextStyle( fontWeight: FontWeight.bold ,fontSize: 22.0 , color: Color.fromRGBO(254,38,77,1)),
         ),
         centerTitle: true,
         backgroundColor: Color.fromRGBO(255,221,8,1),
@@ -142,62 +129,92 @@ class _MyHomePageState extends State<MyHomePage> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: <Widget>[
                Container(
-                    height: 150,
-                    width: 150,
-                    margin: EdgeInsets.only(bottom: 60),
-                    child: Image.asset('assets/images/logo.png', fit: BoxFit.contain, width: 25, height: 35,)
+                    height: 130,
+                    width: 100,
+                    margin: EdgeInsets.only(bottom: 50),
+
+                    child: Image.asset('assets/images/logo.png', fit: BoxFit.contain  , width: 25, height: 35,)
           ),
-              Row(
+               Container(
+                 height: 80,
+                 width: 350,
+                 margin: EdgeInsets.only(bottom: 5,top: 20),
+                 decoration: BoxDecoration(
+                     borderRadius: BorderRadius.circular(20),
+                     gradient: LinearGradient(colors: [Color(0xfffffde7),Color(0xfffffde7)]),
+                     boxShadow: [BoxShadow(
+                         color: Color(0xffe0e0e0),
+                         offset: Offset(1, 6),
+                         blurRadius: 10)]
+                 ),
+              child :Row(
                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                       children: <Widget>[
                         Column(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: <Widget>[
                               Text(
-                              'votre longitude est : ',
+                              'Longitude : ',
                                 style: TextStyle(fontSize: 18.0, fontWeight: FontWeight.bold ,color: Color.fromRGBO(254,38,77, 1)),
                               ),
                               Text(
                                 '${adress_longitude}',
+                                overflow: TextOverflow.fade,
                                 style: TextStyle(color:/* Color.fromRGBO(208,92,227, 1)*/ Colors.black87, fontSize: 25),
                               ),]),
                         Column(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: <Widget>[
                               Text(
-                              'votre latitude est : ',
+                              'Latitude : ',
                                 style: TextStyle(fontSize: 18.0,fontWeight: FontWeight.bold,color: Color.fromRGBO(254,38,77, 1) ),
                               ),
                               Text(
                                 '$adress_latitude',
+                                overflow: TextOverflow.fade,
                                 style: TextStyle(color:/* Color.fromRGBO(208,92,227, 1)*/ Colors.black87 , fontSize: 25),
                               ),
                             ]
             ),
                       ]
-            ),
-            Padding(padding: EdgeInsets.fromLTRB(0, 14, 0, 0),
-                child :Text(
-                'votre vitesse est : ',
-                  style: TextStyle(fontSize: 20.0, fontWeight: FontWeight.bold,color:Color.fromRGBO(254,38,77, 1)),
+            ),),
+               Container(
+                 height: 80,
+                 width: 150,
+                 margin: EdgeInsets.only(bottom: 0),
+                 decoration: BoxDecoration(
+                     borderRadius: BorderRadius.circular(20),
+                     gradient: LinearGradient(colors: [Color(0xfffffde7),Color(0xfffffde7)]),
+                     boxShadow: [BoxShadow(
+                         color: Color(0xffe0e0e0),
+                         offset: Offset(2, 6),
+                         blurRadius: 10)]
+                 ),
+                 child :Column(
+                     mainAxisAlignment: MainAxisAlignment.center,
+                     children: <Widget>[
+                       Text(
+                           'Vitesse : ',
+                           style: TextStyle(fontSize: 20.0, fontWeight: FontWeight.bold,color:Color.fromRGBO(254,38,77, 1)),
+                         ),
 
-                ),
-            ),
-            Text(
-              '$adress_speed',
-              style: TextStyle(color: Colors.black87 , fontSize: 25),
+                       Text(
+                         '$adress_speed',
+                          overflow: TextOverflow.fade,
+                         style: TextStyle(color: Colors.black87 , fontSize: 25),
+                       ),]),
             ),
             Container(
-              width: 300,
-              height: 80,
-              margin: EdgeInsets.fromLTRB(0,60,0,15),
+              width: 230,
+              height: 65,
+              margin: EdgeInsets.fromLTRB(0,30,0,15),
               child : RaisedButton.icon(
-                         icon: Icon(Icons.settings_input_antenna,size: 50.5,color: buttoncolor),
-                         label: Text(siconnecte , style: TextStyle( fontSize: 25.0,color: buttoncolor ),
+                         icon: Icon(Icons.settings_input_antenna,size: 35.5,color: buttoncolor),
+                         label: Text(siconnecte , style: TextStyle( fontSize: 20.0,color: buttoncolor ),
                          ),
                         textColor: Colors.white ,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(75)),
-                        elevation: 10,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(25)),
+                        elevation: 7,
                         onPressed: connect , ///les changements sur l'ecran se déclenche d'ici
                           color: _color,
                           highlightElevation: 10,
