@@ -29,11 +29,14 @@ class _MyHomePageState extends State<MyHomePage> {
   bool first = true;
   var _color = Color.fromRGBO(229,144,129, 1);
   var buttoncolor = Color.fromRGBO(127,0,0, 1);
+  var direction;
 
 
   Future getadress () async{ /// recuperer la position,vitesse faire des mise à jour pour le bus prochain en temps reel
     print(widget.info.data['busID'].toString());
-    var query = await Firestore.instance.collection('bus').where('busID',isEqualTo: widget.info.data['busID']).getDocuments();
+    var ligneQuery = await Firestore.instance.collection('lignes').where('ligneID',isEqualTo: widget.info.data['ligne']).getDocuments();
+    direction = ligneQuery.documents[0].data['direction'];
+    print('heeeeeeeeeeere        direction'+direction );
     if (connected == true) {
       /* writing to database */
       Map<String ,dynamic> data = Map();
@@ -53,6 +56,7 @@ class _MyHomePageState extends State<MyHomePage> {
                   if (first == true) {data['prochain']=2; first= false;}
                   else {
                     /// récuperer l'arret prochain de ce bus
+                    var query = await Firestore.instance.collection('bus').where('busID',isEqualTo: widget.info.data['busID']).getDocuments();
                     int prochain = query.documents[0].data['prochain'];
                      print('prochain  : '+prochain.toString());
                      var Ligne = await Firestore.instance.collection('lignes').where('ligneID' , isEqualTo: widget.info.data['ligne']).getDocuments();
@@ -69,13 +73,13 @@ class _MyHomePageState extends State<MyHomePage> {
                       else {data['prochain']=prochain;}
 
                   }
-                  query.documents[0].reference.updateData(data);
+                  widget.info.reference.updateData(data);
                   setState(() {});
           });
     }
     else {
       print('heeeeeeeere');
-      query.documents[0].reference.updateData({'actif' : false});
+      widget.info.reference.updateData({'actif' : false});
       positionStream.cancel();
       setState(() {});
     }
@@ -135,6 +139,8 @@ class _MyHomePageState extends State<MyHomePage> {
 
                     child: Image.asset('assets/images/logo.png', fit: BoxFit.contain  , width: 25, height: 35,)
           ),
+               Text('Direction : '+direction, style: TextStyle(fontSize: 14.0, color: Color.fromRGBO(254,38,77, 1),fontWeight: FontWeight.bold),
+               ),
                Container(
                  height: 80,
                  width: 350,
@@ -220,8 +226,7 @@ class _MyHomePageState extends State<MyHomePage> {
                           highlightElevation: 10,
                       ),
             ),
-            Text('ETAT : '+siconnecte, style: TextStyle(fontSize: 16.0),
-            )
+
           ],
         ),
       ),
