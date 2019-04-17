@@ -1,0 +1,13 @@
+<component name="libraryTable">
+  <library name="Flutter Plugins" type="FlutterPluginsLibraryType">
+    <CLASSES>
+      <root url="file://C:/SDK/flutter/.pub-cache/hosted/pub.dartlang.org/firebase_core-0.3.4" />
+      <root url="file://C:/SDK/flutter/.pub-cache/hosted/pub.dartlang.org/geolocator-3.0.1" />
+      <root url="file://C:/SDK/flutter/.pub-cache/hosted/pub.dartlang.org/permission_handler-3.0.0" />
+      <root url="file://C:/SDK/flutter/.pub-cache/hosted/pub.dartlang.org/google_api_availability-2.0.0" />
+      <root url="file://C:/SDK/flutter/.pub-cache/hosted/pub.dartlang.org/cloud_firestore-0.9.13+1" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>
